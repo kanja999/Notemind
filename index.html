@@ -7,384 +7,175 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="NoteMind"/>
-<meta name="description" content="Aplikasi catatan cerdas dengan linked notes, graph view, dan markdown"/>
 <title>NoteMind</title>
-
-<!-- PWA Manifest inline -->
 <script>
 const manifestData = {
-  name: "NoteMind",
-  short_name: "NoteMind",
-  description: "Aplikasi catatan cerdas",
-  start_url: "./",
-  display: "standalone",
-  background_color: "#faf8f3",
-  theme_color: "#3d2b1f",
-  orientation: "portrait",
-  icons: [
-    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%233d2b1f'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='%235a7c5a'%3E◈%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml" },
-    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%233d2b1f'/%3E%3Ctext x='256' y='350' font-size='280' text-anchor='middle' fill='%235a7c5a'%3E◈%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml" }
-  ]
+  name:"NoteMind",short_name:"NoteMind",start_url:"./",display:"standalone",
+  background_color:"#faf8f3",theme_color:"#3d2b1f",orientation:"portrait",
+  icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%233d2b1f'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='%235a7c5a'%3E◈%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml"}]
 };
-const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
-const manifestURL = URL.createObjectURL(blob);
-document.write(`<link rel="manifest" href="${manifestURL}">`);
+const mb = new Blob([JSON.stringify(manifestData)],{type:'application/json'});
+document.write(`<link rel="manifest" href="${URL.createObjectURL(mb)}">`);
 </script>
-
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  :root {
-    --bg: #faf8f3;
-    --bg2: #f3efe6;
-    --white: #ffffff;
-    --border: #e8e0d0;
-    --border2: #d8cfc0;
-    --text: #3d2b1f;
-    --text2: #7a6a5a;
-    --text3: #b0a090;
-    --green: #5a7c5a;
-    --green2: #e8f0e8;
-    --green3: #c8ddc8;
-    --accent: #3d2b1f;
-    --red: #c0392b;
-    --yellow: #f4a72a;
-    --radius: 14px;
-    --radius-sm: 8px;
-    --shadow: 0 2px 12px rgba(61,43,31,0.08);
-    --shadow-lg: 0 8px 32px rgba(61,43,31,0.15);
-    --font: 'Lora', Georgia, serif;
-    --mono: 'JetBrains Mono', monospace;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-top: env(safe-area-inset-top, 0px);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    max-width: 430px;
-    margin: 0 auto;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── Layout ── */
-  #app { display: flex; flex-direction: column; min-height: 100dvh; }
-
-  .header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: calc(12px + var(--safe-top)) 20px 12px;
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  .logo {
-    font-family: var(--font); font-size: 22px; font-weight: 700;
-    color: var(--text); letter-spacing: -0.5px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .logo-mark { color: var(--green); font-size: 20px; }
-
-  .scroll-area {
-    flex: 1; overflow-y: auto; padding: 16px 20px;
-    padding-bottom: calc(100px + var(--safe-bottom));
-    scroll-behavior: smooth;
-  }
-  .scroll-area::-webkit-scrollbar { width: 3px; }
-  .scroll-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-  /* ── Bottom Nav ── */
-  .nav-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 430px;
-    background: rgba(255,255,255,0.95);
-    border-top: 1px solid var(--border);
-    display: flex; justify-content: space-around;
-    padding: 8px 0 calc(12px + var(--safe-bottom));
-    z-index: 40; backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .nav-item {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 3px; color: var(--text3); font-size: 10px;
-    font-family: var(--mono); cursor: pointer;
-    padding: 6px 12px; border-radius: 12px;
-    transition: all 0.2s; border: none; background: none;
-    letter-spacing: 0.3px;
-  }
-  .nav-item.active { color: var(--green); }
-  .nav-item svg { transition: transform 0.2s; }
-  .nav-item.active svg { transform: scale(1.1); }
-
-  /* ── FAB ── */
-  .fab {
-    position: fixed; bottom: calc(72px + var(--safe-bottom)); right: calc(50% - 210px);
-    width: 54px; height: 54px; border-radius: 27px;
-    background: var(--accent); color: #fff; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: var(--shadow-lg); z-index: 45;
-    transition: all 0.2s; transform: scale(1);
-  }
-  .fab:active { transform: scale(0.92); }
-
-  /* ── Cards ── */
-  .card {
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px;
-    margin-bottom: 10px; cursor: pointer;
-    transition: all 0.18s; position: relative;
-    box-shadow: var(--shadow);
-  }
-  .card:active { transform: scale(0.98); }
-  .card.pinned { border-color: var(--green); background: #f9fcf9; }
-  .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; line-height: 1.3; }
-  .card-preview { font-size: 12px; color: var(--text3); line-height: 1.6; margin-bottom: 9px; font-family: var(--mono); }
-  .card-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .pin-badge { position: absolute; top: 12px; right: 12px; color: var(--green); }
-
-  /* ── Chips ── */
-  .tag { background: var(--bg2); color: var(--text2); font-size: 11px; padding: 3px 9px; border-radius: 20px; font-family: var(--mono); }
-  .folder-chip { background: var(--green2); color: var(--green); font-size: 11px; padding: 3px 9px; border-radius: 20px; font-family: var(--mono); }
-  .date-text { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
-
-  /* ── Section Title ── */
-  .section-title {
-    font-size: 10px; color: var(--text3); font-weight: 600;
-    letter-spacing: 1.2px; text-transform: uppercase;
-    margin-bottom: 12px; margin-top: 4px; font-family: var(--mono);
-  }
-
-  /* ── Buttons ── */
-  .btn {
-    background: var(--accent); color: #fff; border: none;
-    border-radius: var(--radius-sm); padding: 10px 18px;
-    font-size: 14px; cursor: pointer; font-family: var(--font);
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: all 0.18s; font-weight: 600;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-outline {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 10px 16px; font-size: 14px; cursor: pointer;
-    font-family: var(--font); display: inline-flex; align-items: center; gap: 7px;
-    transition: all 0.18s;
-  }
-  .btn-outline:active { transform: scale(0.96); background: var(--bg2); }
-  .btn-sm { padding: 7px 13px; font-size: 13px; }
-  .btn-danger { color: var(--red); border-color: #f5c6c3; }
-  .btn-danger:active { background: #fdf0ef; }
-  .btn-green { background: var(--green); }
-
-  /* ── Inputs ── */
-  .input {
-    width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 12px 14px; font-size: 14px; font-family: var(--font);
-    background: var(--white); color: var(--text); outline: none;
-    transition: border-color 0.2s;
-  }
-  .input:focus { border-color: var(--green); }
-  .input-title { font-size: 20px; font-weight: 700; border: none; border-bottom: 2px solid var(--border); border-radius: 0; padding: 8px 0; }
-  .input-title:focus { border-color: var(--green); }
-
-  .textarea {
-    width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 14px; font-size: 13px; font-family: var(--mono);
-    background: var(--white); color: var(--text); outline: none;
-    resize: none; line-height: 1.8; min-height: 320px;
-    transition: border-color 0.2s;
-  }
-  .textarea:focus { border-color: var(--green); }
-
-  /* ── Search ── */
-  .search-wrap { position: relative; margin-bottom: 16px; }
-  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
-  .search-input { padding-left: 40px !important; }
-
-  /* ── Quick Actions ── */
-  .quick-actions { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
-  .quick-actions::-webkit-scrollbar { display: none; }
-  .quick-btn {
-    white-space: nowrap; font-size: 12px; padding: 9px 14px;
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: 20px; cursor: pointer; font-family: var(--mono);
-    color: var(--text); transition: all 0.18s; flex-shrink: 0;
-  }
-  .quick-btn:active { background: var(--bg2); transform: scale(0.96); }
-
-  /* ── Markdown Preview ── */
-  .md-preview {
-    font-family: var(--font); font-size: 15px; line-height: 1.85;
-    color: var(--text); background: var(--white);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 18px;
-  }
-  .md-preview h1 { font-size: 1.5em; color: var(--text); margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
-  .md-preview h2 { font-size: 1.2em; color: var(--text); margin: 14px 0 6px; }
-  .md-preview h3 { font-size: 1.05em; color: var(--text); margin: 10px 0 4px; }
-  .md-preview strong { color: var(--accent); }
-  .md-preview em { font-style: italic; color: var(--text2); }
-  .md-preview code { background: var(--bg2); padding: 2px 7px; border-radius: 5px; font-size: 0.88em; font-family: var(--mono); color: var(--green); }
-  .md-preview del { opacity: 0.45; }
-  .md-preview ul { padding-left: 20px; margin: 8px 0; }
-  .md-preview ol { padding-left: 20px; margin: 8px 0; }
-  .md-preview li { margin: 4px 0; }
-  .md-preview blockquote { border-left: 3px solid var(--green); padding-left: 14px; color: var(--text2); font-style: italic; margin: 10px 0; }
-  .md-preview hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .backlink { color: var(--green); cursor: pointer; font-weight: 600; text-decoration: none; border-bottom: 1px dashed var(--green3); }
-  .backlink:hover { background: var(--green2); border-radius: 3px; }
-
-  /* ── Toolbar ── */
-  .md-toolbar {
-    display: flex; gap: 6px; overflow-x: auto; padding: 8px 0;
-    border-bottom: 1px solid var(--border); margin-bottom: 10px;
-  }
-  .md-toolbar::-webkit-scrollbar { display: none; }
-  .tool-btn {
-    flex-shrink: 0; background: var(--bg2); border: none; border-radius: 6px;
-    padding: 6px 10px; font-size: 12px; font-family: var(--mono); cursor: pointer;
-    color: var(--text2); transition: all 0.15s;
-  }
-  .tool-btn:active { background: var(--green2); color: var(--green); transform: scale(0.94); }
-
-  /* ── Graph Canvas ── */
-  #graph-canvas {
-    width: 100%; height: 380px; border-radius: var(--radius);
-    background: var(--bg2); touch-action: none; cursor: pointer;
-    border: 1px solid var(--border);
-  }
-
-  /* ── Empty State ── */
-  .empty-state {
-    text-align: center; padding: 60px 20px;
-    color: var(--text3); font-family: var(--font);
-  }
-  .empty-state .emoji { font-size: 48px; margin-bottom: 14px; }
-  .empty-state h3 { font-size: 17px; margin-bottom: 8px; color: var(--text2); }
-  .empty-state p { font-size: 13px; font-family: var(--mono); }
-
-  /* ── Toast ── */
-  #toast {
-    position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--accent); color: #fff;
-    padding: 11px 22px; border-radius: 22px;
-    font-size: 13px; z-index: 200; font-family: var(--mono);
-    box-shadow: var(--shadow-lg); opacity: 0;
-    transition: all 0.3s; white-space: nowrap; pointer-events: none;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  #toast.error { background: var(--red); }
-
-  /* ── Install Banner ── */
-  #install-banner {
-    display: none; background: var(--green); color: #fff;
-    padding: 12px 20px; align-items: center; justify-content: space-between;
-    font-size: 13px; font-family: var(--mono); gap: 12px;
-  }
-  #install-banner.show { display: flex; }
-
-  /* ── Tip Box ── */
-  .tip-box {
-    background: var(--green2); border-radius: var(--radius-sm);
-    padding: 11px 14px; font-size: 12px; color: var(--text2);
-    font-family: var(--mono); margin-top: 10px; line-height: 1.6;
-    border-left: 3px solid var(--green);
-  }
-
-  /* ── Divider ── */
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
-
-  /* ── Stats Bar ── */
-  .stats-bar {
-    display: flex; gap: 12px; overflow-x: auto; margin-bottom: 20px;
-    padding-bottom: 4px;
-  }
-  .stats-bar::-webkit-scrollbar { display: none; }
-  .stat-item {
-    flex-shrink: 0; background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 10px 16px; text-align: center;
-    min-width: 80px;
-  }
-  .stat-num { font-size: 20px; font-weight: 700; color: var(--green); font-family: var(--mono); }
-  .stat-label { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.5px; }
-
-  /* ── Animations ── */
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeIn 0.25s ease-out; }
-
-  @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  .slide-up { animation: slideUp 0.3s ease-out; }
-
-  /* ── View transitions ── */
-  .view { animation: fadeIn 0.2s ease-out; }
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#faf8f3;--bg2:#f3efe6;--white:#fff;--border:#e8e0d0;--border2:#d8cfc0;
+  --text:#3d2b1f;--text2:#7a6a5a;--text3:#b0a090;
+  --green:#5a7c5a;--green2:#e8f0e8;--green3:#c8ddc8;
+  --accent:#3d2b1f;--red:#c0392b;
+  --radius:14px;--radius-sm:8px;
+  --shadow:0 2px 12px rgba(61,43,31,0.08);--shadow-lg:0 8px 32px rgba(61,43,31,0.15);
+  --font:'Lora',Georgia,serif;--mono:'JetBrains Mono',monospace;
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+#app{display:flex;flex-direction:column;min-height:100dvh;}
+.header{background:var(--bg);border-bottom:1px solid var(--border);padding:calc(12px + var(--safe-top)) 20px 12px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(10px);}
+.logo{font-family:var(--font);font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;}
+.logo-mark{color:var(--green);}
+.scroll-area{flex:1;overflow-y:auto;padding:16px 20px;padding-bottom:calc(100px + var(--safe-bottom));scroll-behavior:smooth;}
+.scroll-area::-webkit-scrollbar{width:3px;}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,0.95);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 calc(12px + var(--safe-bottom));z-index:40;backdrop-filter:blur(16px);}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text3);font-size:10px;font-family:var(--mono);cursor:pointer;padding:6px 12px;border-radius:12px;transition:all 0.2s;border:none;background:none;}
+.nav-item.active{color:var(--green);}
+.fab{position:fixed;bottom:calc(72px + var(--safe-bottom));right:calc(50% - 210px);width:54px;height:54px;border-radius:27px;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-lg);z-index:45;transition:all 0.2s;}
+.fab:active{transform:scale(0.92);}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all 0.18s;position:relative;box-shadow:var(--shadow);}
+.card:active{transform:scale(0.98);}
+.card.pinned{border-color:var(--green);background:#f9fcf9;}
+.card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.3;}
+.card-preview{font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:9px;font-family:var(--mono);}
+.card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.card-img{width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.pin-badge{position:absolute;top:12px;right:12px;color:var(--green);}
+.tag{background:var(--bg2);color:var(--text2);font-size:11px;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
+.folder-chip{background:var(--green2);color:var(--green);font-size:11px;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
+.date-text{font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:auto;}
+.section-title{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px;margin-top:4px;font-family:var(--mono);}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:14px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:7px;transition:all 0.18s;font-weight:600;}
+.btn:active{transform:scale(0.96);}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;font-size:14px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:7px;transition:all 0.18s;}
+.btn-outline:active{transform:scale(0.96);background:var(--bg2);}
+.btn-sm{padding:7px 13px;font-size:13px;}
+.btn-danger{color:var(--red);border-color:#f5c6c3;}
+.btn-green{background:var(--green);}
+.input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;font-family:var(--font);background:var(--white);color:var(--text);outline:none;transition:border-color 0.2s;}
+.input:focus{border-color:var(--green);}
+.input-title{font-size:20px;font-weight:700;border:none;border-bottom:2px solid var(--border);border-radius:0;padding:8px 0;}
+.input-title:focus{border-color:var(--green);}
+.textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;font-family:var(--mono);background:var(--white);color:var(--text);outline:none;resize:none;line-height:1.8;min-height:260px;transition:border-color 0.2s;}
+.textarea:focus{border-color:var(--green);}
+.search-wrap{position:relative;margin-bottom:16px;}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}
+.search-input{padding-left:40px!important;}
+.quick-actions{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;}
+.quick-actions::-webkit-scrollbar{display:none;}
+.quick-btn{white-space:nowrap;font-size:12px;padding:9px 14px;background:var(--white);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-family:var(--mono);color:var(--text);transition:all 0.18s;flex-shrink:0;}
+.quick-btn:active{background:var(--bg2);}
+.md-preview{font-family:var(--font);font-size:15px;line-height:1.85;color:var(--text);background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.md-preview h1{font-size:1.5em;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+.md-preview h2{font-size:1.2em;margin:14px 0 6px;}
+.md-preview h3{font-size:1.05em;margin:10px 0 4px;}
+.md-preview strong{color:var(--accent);}
+.md-preview em{font-style:italic;color:var(--text2);}
+.md-preview code{background:var(--bg2);padding:2px 7px;border-radius:5px;font-size:0.88em;font-family:var(--mono);color:var(--green);}
+.md-preview ul,.md-preview ol{padding-left:20px;margin:8px 0;}
+.md-preview li{margin:4px 0;}
+.md-preview blockquote{border-left:3px solid var(--green);padding-left:14px;color:var(--text2);font-style:italic;margin:10px 0;}
+.md-preview img{max-width:100%;border-radius:8px;margin:8px 0;}
+.backlink{color:var(--green);cursor:pointer;font-weight:600;border-bottom:1px dashed var(--green3);}
+/* Checklist */
+.md-preview .check-item{display:flex;align-items:flex-start;gap:10px;margin:6px 0;padding:8px 10px;background:var(--bg2);border-radius:8px;}
+.md-preview .check-item input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--green);flex-shrink:0;margin-top:2px;}
+.md-preview .check-item.done span{text-decoration:line-through;color:var(--text3);}
+.md-preview .check-item span{font-family:var(--font);font-size:14px;line-height:1.5;}
+/* Checklist in editor */
+.checklist-section{background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-top:10px;}
+.check-editor-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.check-editor-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);flex-shrink:0;}
+.check-editor-item input[type=text]{flex:1;border:none;border-bottom:1px solid var(--border);background:transparent;padding:4px 0;font-family:var(--font);font-size:14px;color:var(--text);outline:none;}
+.md-toolbar{display:flex;gap:6px;overflow-x:auto;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.md-toolbar::-webkit-scrollbar{display:none;}
+.tool-btn{flex-shrink:0;background:var(--bg2);border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--text2);transition:all 0.15s;}
+.tool-btn:active{background:var(--green2);color:var(--green);}
+/* Image upload */
+.img-upload-area{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;margin-top:10px;transition:all 0.2s;background:var(--bg2);}
+.img-upload-area:hover{border-color:var(--green);background:var(--green2);}
+.img-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.img-preview-item{position:relative;}
+.img-preview-item img{width:100%;height:80px;object-fit:cover;border-radius:8px;}
+.img-preview-item .del-img{position:absolute;top:4px;right:4px;background:rgba(192,57,43,0.85);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#graph-canvas{width:100%;height:380px;border-radius:var(--radius);background:var(--bg2);touch-action:none;cursor:pointer;border:1px solid var(--border);}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-state .emoji{font-size:48px;margin-bottom:14px;}
+.empty-state h3{font-size:17px;margin-bottom:8px;color:var(--text2);}
+.empty-state p{font-size:13px;font-family:var(--mono);}
+#toast{position:fixed;bottom:calc(80px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;padding:11px 22px;border-radius:22px;font-size:13px;z-index:200;font-family:var(--mono);box-shadow:var(--shadow-lg);opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.error{background:var(--red);}
+#toast.info{background:#2980b9;}
+.tip-box{background:var(--green2);border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;color:var(--text2);font-family:var(--mono);margin-top:10px;line-height:1.6;border-left:3px solid var(--green);}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.stats-bar{display:flex;gap:12px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;}
+.stats-bar::-webkit-scrollbar{display:none;}
+.stat-item{flex-shrink:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;text-align:center;min-width:80px;}
+.stat-num{font-size:20px;font-weight:700;color:var(--green);font-family:var(--mono);}
+.stat-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+/* Login screen */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:40px 30px;text-align:center;background:var(--bg);}
+.login-logo{font-size:64px;margin-bottom:20px;}
+.login-title{font-family:var(--font);font-size:28px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.login-sub{font-family:var(--mono);font-size:13px;color:var(--text3);margin-bottom:40px;line-height:1.7;}
+.login-btn{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px 24px;font-size:15px;font-family:var(--font);color:var(--text);cursor:pointer;box-shadow:var(--shadow);transition:all 0.2s;font-weight:600;}
+.login-btn:active{transform:scale(0.97);}
+.login-features{margin-top:40px;text-align:left;width:100%;}
+.login-feature{display:flex;align-items:center;gap:12px;padding:10px 0;font-family:var(--mono);font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);}
+/* Sync indicator */
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:6px;}
+.sync-dot.syncing{background:var(--text3);animation:pulse 1s infinite;}
+.sync-dot.offline{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn 0.25s ease-out;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.slide-up{animation:slideUp 0.3s ease-out;}
+.view{animation:fadeIn 0.2s ease-out;}
 </style>
 </head>
 <body>
-
-<div id="install-banner">
-  <span>📲 Install NoteMind ke homescreen!</span>
-  <button onclick="installPWA()" style="background:#fff;color:var(--green);border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-family:var(--mono);cursor:pointer;font-weight:600;">Install</button>
-  <button onclick="document.getElementById('install-banner').classList.remove('show')" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;padding:0 4px;">×</button>
-</div>
-
 <div id="app"></div>
 <div id="toast"></div>
 
-<script>
-// ─── PWA Service Worker ────────────────────────────────────────────────────────
-const SW_CODE = `
-const CACHE = 'notemind-v1';
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch', e => {
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./'))));
-});
-`;
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-if ('serviceWorker' in navigator) {
-  const swBlob = new Blob([SW_CODE], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(swBlob);
-  navigator.serviceWorker.register(swUrl).catch(() => {});
-}
-
-// ─── PWA Install ──────────────────────────────────────────────────────────────
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); deferredPrompt = e;
-  document.getElementById('install-banner').classList.add('show');
-});
-window.installPWA = async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') showToast('NoteMind berhasil diinstall! 🎉');
-  deferredPrompt = null;
-  document.getElementById('install-banner').classList.remove('show');
+// ─── Firebase Config ──────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAj6fs4QNc7G4M8i8Fz3CwkTHIS_IS_PLACEHOLDER",
+  authDomain: "noteminda.firebaseapp.com",
+  projectId: "noteminda",
+  storageBucket: "noteminda.appspot.com",
+  messagingSenderId: "705895134394",
+  appId: "1:705895134394:web:6d966e73cf_PLACEHOLDER",
+  measurementId: "G-EPTVBLY3RV"
 };
 
-// ─── Storage ──────────────────────────────────────────────────────────────────
-const DB = {
-  get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-};
+const fireApp = initializeApp(firebaseConfig);
+const auth = getAuth(fireApp);
+const db = getFirestore(fireApp);
+const provider = new GoogleAuthProvider();
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let notes = DB.get('notemind_notes') || getSampleNotes();
+let currentUser = null;
+let notes = [];
+let unsubscribe = null;
 let currentView = 'home';
 let activeNote = null;
 let editState = {};
@@ -394,345 +185,435 @@ let activeFolder = null;
 let previewMode = false;
 let graphAnimId = null;
 let graphNodes = [];
+let isSyncing = false;
+let editImages = []; // base64 images
+let editChecklist = []; // [{text, done}]
 
-function getSampleNotes() {
-  return [
-    {
-      id: '1', title: 'Selamat Datang di NoteMind 🌿',
-      content: '# NoteMind\n\nAplikasi catatan cerdas yang menghubungkan ide-idemu.\n\n## Fitur Utama\n- **Linked Notes** — hubungkan dengan [[sintaks ini]]\n- **Tags & Folder** — kategorikan catatanmu\n- **Graph View** — lihat koneksi visual\n- **Daily Journal** — catat harianmu\n\n> Mulai dengan membuat catatan baru!',
-      tags: ['panduan'], pinned: true, folder: 'Panduan',
-      created: Date.now() - 86400000 * 3, updated: Date.now() - 3600000, links: ['Ide Kreatif']
-    },
-    {
-      id: '2', title: 'Ide Kreatif',
-      content: '# Ide Kreatif\n\nKumpulan ide-ide yang menginspirasi.\n\n## Referensi\n[[Selamat Datang di NoteMind 🌿]] adalah panduan yang bagus.\n\n## Catatan\n- Selalu catat ide yang muncul\n- Hubungkan dengan catatan lain',
-      tags: ['ide', 'kreatif'], pinned: false, folder: 'Proyek',
-      created: Date.now() - 86400000 * 2, updated: Date.now() - 7200000, links: ['Selamat Datang di NoteMind 🌿']
-    },
-    {
-      id: '3', title: 'Journal — Hari Pertama',
-      content: '# Jurnal Harian\n\n## Refleksi\nHari yang produktif! Mencoba NoteMind untuk pertama kali.\n\n## Rencana Besok\n- Buat lebih banyak catatan\n- Coba Graph View\n- Hubungkan catatan satu sama lain',
-      tags: ['jurnal', 'harian'], pinned: false, folder: 'Jurnal',
-      created: Date.now() - 3600000, updated: Date.now() - 1800000, links: []
-    }
-  ];
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if (user) {
+    subscribeNotes();
+    render();
+  } else {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    notes = [];
+    render();
+  }
+});
+
+async function loginGoogle() {
+  try {
+    showToast('Menghubungkan...', 'info');
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    showToast('Login gagal: ' + e.message, 'error');
+  }
+}
+
+async function logout() {
+  if (!confirm('Keluar dari akun?')) return;
+  await signOut(auth);
+  showToast('Berhasil keluar');
+}
+
+// ─── Firestore Sync ───────────────────────────────────────────────────────────
+function subscribeNotes() {
+  if (!currentUser) return;
+  if (unsubscribe) unsubscribe();
+  isSyncing = true;
+  const q = query(collection(db, 'notes'), where('uid', '==', currentUser.uid));
+  unsubscribe = onSnapshot(q, (snap) => {
+    notes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    isSyncing = false;
+    // Update activeNote if open
+    if (activeNote) activeNote = notes.find(n => n.id === activeNote.id) || activeNote;
+    render();
+  }, (err) => {
+    isSyncing = false;
+    showToast('Sync error: ' + err.message, 'error');
+  });
+}
+
+async function saveNoteToFirestore(note) {
+  if (!currentUser) return;
+  isSyncing = true; render();
+  try {
+    await setDoc(doc(db, 'notes', note.id), { ...note, uid: currentUser.uid, updatedAt: serverTimestamp() });
+    showToast('Tersimpan & tersinkron ✓');
+  } catch(e) {
+    showToast('Gagal simpan: ' + e.message, 'error');
+  }
+  isSyncing = false;
+}
+
+async function deleteNoteFromFirestore(id) {
+  if (!currentUser) return;
+  try {
+    await deleteDoc(doc(db, 'notes', id));
+    showToast('Catatan dihapus', 'error');
+  } catch(e) {
+    showToast('Gagal hapus', 'error');
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function saveNotes() { DB.set('notemind_notes', notes); }
-
-function showToast(msg, type = '') {
+function showToast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show' + (type ? ' ' + type : '');
+  t.textContent = msg; t.className = 'show' + (type ? ' '+type : '');
   setTimeout(() => t.className = '', 2500);
 }
 
 function formatDate(ts) {
-  const d = new Date(ts), now = new Date();
-  const diff = (now - d) / 1000;
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const now = new Date(), diff = (now - d) / 1000;
   if (diff < 60) return 'Baru saja';
-  if (diff < 3600) return Math.floor(diff / 60) + ' mnt lalu';
-  if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  if (diff < 3600) return Math.floor(diff/60) + ' mnt lalu';
+  if (diff < 86400) return Math.floor(diff/3600) + ' jam lalu';
+  return d.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
 }
 
-function renderMarkdown(text) {
+function renderMarkdown(text, checklist=[]) {
   if (!text) return '';
-  return text
+  let html = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/^## (.+)$/gm,'<h2>$1</h2>')
     .replace(/^# (.+)$/gm,'<h1>$1</h1>')
     .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
-    .replace(/^---$/gm,'<hr>')
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
     .replace(/~~(.+?)~~/g,'<del>$1</del>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
     .replace(/^- (.+)$/gm,'<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
     .replace(/\[\[(.+?)\]\]/g,'<span class="backlink" data-link="$1">◈ $1</span>')
     .replace(/\n/g,'<br>');
+
+  // Add checklist
+  if (checklist && checklist.length > 0) {
+    html += '<div style="margin-top:16px">';
+    checklist.forEach((item, i) => {
+      html += `<div class="check-item ${item.done?'done':''}">
+        <input type="checkbox" ${item.done?'checked':''} onchange="toggleCheck(${i})"/>
+        <span>${item.text}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  return html;
 }
 
 function extractLinks(content) {
-  return [...content.matchAll(/\[\[(.+?)\]\]/g)].map(m => m[1]);
+  return [...(content||'').matchAll(/\[\[(.+?)\]\]/g)].map(m=>m[1]);
 }
-
 function getAllTags() {
-  const t = {};
-  notes.forEach(n => (n.tags||[]).forEach(tag => t[tag] = (t[tag]||0)+1));
-  return t;
+  const t={};notes.forEach(n=>(n.tags||[]).forEach(tag=>t[tag]=(t[tag]||0)+1));return t;
 }
 function getAllFolders() {
-  const f = {};
-  notes.forEach(n => { if (n.folder) f[n.folder] = (f[n.folder]||0)+1; });
-  return f;
+  const f={};notes.forEach(n=>{if(n.folder)f[n.folder]=(f[n.folder]||0)+1;});return f;
 }
-
 function getFilteredNotes() {
-  let list = [...notes];
-  if (activeTag) list = list.filter(n => (n.tags||[]).includes(activeTag));
-  if (activeFolder) list = list.filter(n => n.folder === activeFolder);
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    list = list.filter(n => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q) || (n.tags||[]).some(t=>t.includes(q)));
-  }
-  return list.sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || b.updated-a.updated);
+  let list=[...notes];
+  if(activeTag) list=list.filter(n=>(n.tags||[]).includes(activeTag));
+  if(activeFolder) list=list.filter(n=>n.folder===activeFolder);
+  if(searchQuery){const q=searchQuery.toLowerCase();list=list.filter(n=>n.title.toLowerCase().includes(q)||n.content.toLowerCase().includes(q)||(n.tags||[]).some(t=>t.includes(q)));}
+  return list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.updated||0)-(a.updated||0));
 }
 
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
-const icons = {
-  note: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-  search: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-  graph: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="6" x2="9" y2="10"/><line x1="18" y1="6" x2="15" y2="10"/><line x1="6" y1="18" x2="9" y2="14"/><line x1="18" y1="18" x2="15" y2="14"/></svg>`,
-  journal: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-  plus: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  back: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>`,
-  edit: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-  trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
-  pin: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-  pinFill: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="white"/></svg>`,
-  eye: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
-  tag: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
-  folder: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
-  download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
-  upload: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-  link: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
-  check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>`,
-  close: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+// ─── Image handling ───────────────────────────────────────────────────────────
+function handleImageUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 500000) { showToast('Gambar max 500KB', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      editImages.push(ev.target.result);
+      render();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+window.removeImage = (i) => { editImages.splice(i,1); render(); };
+
+// ─── Checklist ────────────────────────────────────────────────────────────────
+window.toggleCheck = (i) => {
+  if (!activeNote) return;
+  const cl = [...(activeNote.checklist||[])];
+  cl[i] = {...cl[i], done: !cl[i].done};
+  activeNote = {...activeNote, checklist: cl};
+  saveNoteToFirestore({...activeNote, updated: Date.now()});
 };
 
-// ─── Graph View ────────────────────────────────────────────────────────────────
-function initGraph() {
-  const canvas = document.getElementById('graph-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.clientWidth * window.devicePixelRatio;
-  const H = canvas.clientHeight * window.devicePixelRatio;
-  canvas.width = W; canvas.height = H;
-  const scale = window.devicePixelRatio;
+window.addCheckItem = () => {
+  const input = document.getElementById('new-check-input');
+  if (!input || !input.value.trim()) return;
+  editChecklist.push({text: input.value.trim(), done: false});
+  input.value = '';
+  render();
+  setTimeout(()=>{ const el=document.getElementById('new-check-input'); if(el) el.focus(); },50);
+};
 
-  graphNodes = notes.map((n, i) => ({
-    id: n.id, title: n.title,
-    x: (W / scale) / 2 + Math.cos(i / notes.length * Math.PI * 2) * 110,
-    y: (H / scale) / 2 + Math.sin(i / notes.length * Math.PI * 2) * 110,
-    vx: 0, vy: 0, links: n.links || [], tags: n.tags || []
-  }));
-
-  if (graphAnimId) cancelAnimationFrame(graphAnimId);
-
-  function draw() {
-    const ns = graphNodes;
-    const cw = W / scale, ch = H / scale;
-    for (let i = 0; i < ns.length; i++) {
-      for (let j = i + 1; j < ns.length; j++) {
-        const dx = ns[j].x - ns[i].x, dy = ns[j].y - ns[i].y;
-        const d = Math.sqrt(dx*dx + dy*dy) || 1;
-        const f = 900 / (d * d);
-        ns[i].vx -= dx/d*f; ns[i].vy -= dy/d*f;
-        ns[j].vx += dx/d*f; ns[j].vy += dy/d*f;
-      }
-      ns[i].links.forEach(lname => {
-        const t = ns.find(n => n.title === lname); if (!t) return;
-        const dx = t.x - ns[i].x, dy = t.y - ns[i].y;
-        const d = Math.sqrt(dx*dx+dy*dy)||1;
-        const f = (d-100)*0.04;
-        ns[i].vx += dx/d*f; ns[i].vy += dy/d*f;
-        t.vx -= dx/d*f; t.vy -= dy/d*f;
-      });
-      ns[i].vx += (cw/2 - ns[i].x) * 0.006;
-      ns[i].vy += (ch/2 - ns[i].y) * 0.006;
-      ns[i].vx *= 0.82; ns[i].vy *= 0.82;
-      ns[i].x = Math.max(28, Math.min(cw-28, ns[i].x + ns[i].vx));
-      ns[i].y = Math.max(28, Math.min(ch-28, ns[i].y + ns[i].vy));
-    }
-
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.fillStyle = '#f3efe6';
-    ctx.fillRect(0, 0, cw, ch);
-
-    // Edges
-    ns.forEach(n => {
-      n.links.forEach(lname => {
-        const t = ns.find(x => x.title === lname); if (!t) return;
-        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(t.x, t.y);
-        ctx.strokeStyle = '#c8b89a'; ctx.lineWidth = 1.5; ctx.stroke();
-      });
-    });
-
-    // Nodes
-    ns.forEach(n => {
-      const r = 16;
-      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
-      ctx.fillStyle = '#5a7c5a'; ctx.fill();
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
-      ctx.fillStyle = '#3d2b1f';
-      ctx.font = `10px 'JetBrains Mono', monospace`;
-      ctx.textAlign = 'center';
-      const label = n.title.length > 11 ? n.title.slice(0,11)+'…' : n.title;
-      ctx.fillText(label, n.x, n.y + r + 13);
-    });
-
-    ctx.restore();
-    graphAnimId = requestAnimationFrame(draw);
-  }
-  graphAnimId = requestAnimationFrame(draw);
-
-  canvas.onclick = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left), y = (e.clientY - rect.top);
-    const hit = graphNodes.find(n => Math.hypot(n.x-x, n.y-y) < 20);
-    if (hit) { const note = notes.find(n => n.id===hit.id); if (note) openNote(note); }
-  };
-}
+window.removeCheckItem = (i) => { editChecklist.splice(i,1); render(); };
+window.toggleEditCheck = (i) => { editChecklist[i].done = !editChecklist[i].done; render(); };
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
-function openNote(note) {
-  if (graphAnimId) { cancelAnimationFrame(graphAnimId); graphAnimId = null; }
-  activeNote = note; currentView = 'note'; render();
-}
+window.loginGoogle = loginGoogle;
+window.logout = logout;
 
-function newNote() {
-  activeNote = null;
-  editState = { title: 'Catatan Baru', content: '# Catatan Baru\n\n', tags: '', folder: '' };
-  previewMode = false; currentView = 'edit'; render();
-}
+window.openNote = (id) => {
+  if(graphAnimId){cancelAnimationFrame(graphAnimId);graphAnimId=null;}
+  activeNote = notes.find(n=>n.id===id);
+  currentView='note'; render();
+};
 
-function newJournal() {
-  const today = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-  activeNote = null;
-  editState = {
-    title: `Jurnal — ${today}`,
-    content: `# Jurnal ${today}\n\n## 🌤 Bagaimana hariku?\n\n## 🙏 Yang aku syukuri\n- \n\n## 📋 Rencana besok\n- \n\n## 💭 Catatan bebas\n`,
-    tags: 'jurnal,harian', folder: 'Jurnal'
+window.newNote = () => {
+  activeNote=null;
+  editState={title:'Catatan Baru',content:'# Catatan Baru\n\n',tags:'',folder:''};
+  editImages=[]; editChecklist=[]; previewMode=false; currentView='edit'; render();
+};
+
+window.newJournal = () => {
+  const today=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  activeNote=null;
+  editState={title:`Jurnal — ${today}`,content:`# Jurnal ${today}\n\n## 🌤 Bagaimana hariku?\n\n## 🙏 Yang aku syukuri\n- \n\n## 📋 Rencana besok\n- \n\n## 💭 Catatan bebas\n`,tags:'jurnal,harian',folder:'Jurnal'};
+  editImages=[]; editChecklist=[]; previewMode=false; currentView='edit'; render();
+};
+
+window.editNote = (id) => {
+  const note = notes.find(n=>n.id===id);
+  if(!note) return;
+  activeNote=note;
+  editState={title:note.title,content:note.content,tags:(note.tags||[]).join(','),folder:note.folder||''};
+  editImages=[...(note.images||[])];
+  editChecklist=[...(note.checklist||[]).map(c=>({...c}))];
+  previewMode=false; currentView='edit'; render();
+};
+
+window.saveNote = async () => {
+  const tags=editState.tags.split(',').map(t=>t.trim()).filter(Boolean);
+  const links=extractLinks(editState.content);
+  const note = {
+    id: activeNote ? activeNote.id : Date.now().toString(),
+    title: editState.title, content: editState.content,
+    tags, folder: editState.folder,
+    pinned: activeNote ? activeNote.pinned : false,
+    images: editImages,
+    checklist: editChecklist,
+    links, updated: Date.now(),
+    created: activeNote ? activeNote.created : Date.now()
   };
-  previewMode = false; currentView = 'edit'; render();
-}
+  await saveNoteToFirestore(note);
+  currentView='home'; render();
+};
 
-function editNote(note) {
-  activeNote = note;
-  editState = { title: note.title, content: note.content, tags: (note.tags||[]).join(','), folder: note.folder||'' };
-  previewMode = false; currentView = 'edit'; render();
-}
+window.deleteNote = async (id) => {
+  if(!confirm('Hapus catatan ini?')) return;
+  await deleteNoteFromFirestore(id);
+  currentView='home'; activeNote=null; render();
+};
 
-function saveNote() {
-  const tags = editState.tags.split(',').map(t=>t.trim()).filter(Boolean);
-  const links = extractLinks(editState.content);
-  if (activeNote) {
-    notes = notes.map(n => n.id===activeNote.id
-      ? {...n, title:editState.title, content:editState.content, tags, folder:editState.folder, updated:Date.now(), links}
-      : n);
-    activeNote = notes.find(n=>n.id===activeNote.id);
-  } else {
-    const n = { id: Date.now().toString(), title:editState.title, content:editState.content, tags, folder:editState.folder, pinned:false, created:Date.now(), updated:Date.now(), links };
-    notes = [...notes, n];
-  }
-  saveNotes(); showToast('Catatan disimpan ✓');
-  currentView = 'home'; render();
-}
+window.togglePin = async (id) => {
+  const note=notes.find(n=>n.id===id);
+  if(!note) return;
+  await saveNoteToFirestore({...note, pinned:!note.pinned});
+};
 
-function deleteNote(id) {
-  if (!confirm('Hapus catatan ini?')) return;
-  notes = notes.filter(n => n.id!==id);
-  saveNotes(); showToast('Catatan dihapus', 'error');
-  currentView = 'home'; render();
-}
-
-function togglePin(id) {
-  notes = notes.map(n => n.id===id ? {...n, pinned:!n.pinned} : n);
-  saveNotes();
-  if (activeNote && activeNote.id===id) activeNote = notes.find(n=>n.id===id);
+window.setView = (v) => { currentView=v; render(); };
+window.setActiveTag = (t) => { activeTag=t; activeFolder=null; currentView='home'; render(); };
+window.setActiveFolder = (f) => { activeFolder=f; activeTag=null; currentView='home'; render(); };
+window.clearFilter = () => { activeTag=null; activeFolder=null; searchQuery=''; render(); };
+window.togglePreview = () => { previewMode=!previewMode; render(); };
+window.goBack = () => {
+  if(currentView==='edit') currentView=activeNote?'note':'home';
+  else if(currentView==='note') {currentView='home'; activeNote=null;}
+  else currentView='home';
   render();
-}
+};
 
-function insertMarkdown(prefix, suffix='') {
-  const ta = document.getElementById('note-textarea');
-  if (!ta) return;
-  const start = ta.selectionStart, end = ta.selectionEnd;
-  const selected = ta.value.slice(start, end);
-  const newText = ta.value.slice(0,start) + prefix + selected + suffix + ta.value.slice(end);
-  editState.content = newText;
-  ta.value = newText;
-  ta.focus();
-  ta.setSelectionRange(start+prefix.length, end+prefix.length);
-}
+window.insertMarkdown = (pre,suf='') => {
+  const ta=document.getElementById('note-textarea'); if(!ta) return;
+  const s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.slice(s,e);
+  const nv=ta.value.slice(0,s)+pre+sel+suf+ta.value.slice(e);
+  editState.content=nv; ta.value=nv; ta.focus(); ta.setSelectionRange(s+pre.length,e+pre.length);
+};
 
-function exportNotes() {
-  const blob = new Blob([JSON.stringify(notes,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `notemind_${Date.now()}.json`;
-  a.click(); showToast('Ekspor berhasil ✓');
-}
+window.handleImageUpload = handleImageUpload;
 
-function importNotes(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (Array.isArray(data)) {
-        const ids = new Set(notes.map(n=>n.id));
-        notes = [...notes, ...data.filter(n=>!ids.has(n.id))];
-        saveNotes(); showToast(`${data.length} catatan diimpor ✓`);
-        render();
+window.exportNotes = () => {
+  const blob=new Blob([JSON.stringify(notes,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`notemind_${Date.now()}.json`; a.click(); showToast('Ekspor berhasil ✓');
+};
+
+// ─── Graph ────────────────────────────────────────────────────────────────────
+function initGraph() {
+  const canvas=document.getElementById('graph-canvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const DPR=window.devicePixelRatio||1;
+  const W=canvas.clientWidth*DPR, H=canvas.clientHeight*DPR;
+  canvas.width=W; canvas.height=H;
+  graphNodes=notes.map((n,i)=>({
+    id:n.id,title:n.title,
+    x:(W/DPR)/2+Math.cos(i/notes.length*Math.PI*2)*110,
+    y:(H/DPR)/2+Math.sin(i/notes.length*Math.PI*2)*110,
+    vx:0,vy:0,links:n.links||[]
+  }));
+  if(graphAnimId) cancelAnimationFrame(graphAnimId);
+  function draw() {
+    const ns=graphNodes, cw=W/DPR, ch=H/DPR;
+    for(let i=0;i<ns.length;i++){
+      for(let j=i+1;j<ns.length;j++){
+        const dx=ns[j].x-ns[i].x,dy=ns[j].y-ns[i].y,d=Math.sqrt(dx*dx+dy*dy)||1;
+        const f=900/(d*d);
+        ns[i].vx-=dx/d*f;ns[i].vy-=dy/d*f;ns[j].vx+=dx/d*f;ns[j].vy+=dy/d*f;
       }
-    } catch { showToast('Format tidak valid', 'error'); }
+      ns[i].links.forEach(lname=>{
+        const t=ns.find(n=>n.title===lname);if(!t)return;
+        const dx=t.x-ns[i].x,dy=t.y-ns[i].y,d=Math.sqrt(dx*dx+dy*dy)||1,f=(d-100)*0.04;
+        ns[i].vx+=dx/d*f;ns[i].vy+=dy/d*f;t.vx-=dx/d*f;t.vy-=dy/d*f;
+      });
+      ns[i].vx+=(cw/2-ns[i].x)*0.006;ns[i].vy+=(ch/2-ns[i].y)*0.006;
+      ns[i].vx*=0.82;ns[i].vy*=0.82;
+      ns[i].x=Math.max(28,Math.min(cw-28,ns[i].x+ns[i].vx));
+      ns[i].y=Math.max(28,Math.min(ch-28,ns[i].y+ns[i].vy));
+    }
+    ctx.save();ctx.scale(DPR,DPR);
+    ctx.clearRect(0,0,cw,ch);ctx.fillStyle='#f3efe6';ctx.fillRect(0,0,cw,ch);
+    ns.forEach(n=>{n.links.forEach(lname=>{
+      const t=ns.find(x=>x.title===lname);if(!t)return;
+      ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(t.x,t.y);
+      ctx.strokeStyle='#c8b89a';ctx.lineWidth=1.5;ctx.stroke();
+    });});
+    ns.forEach(n=>{
+      ctx.beginPath();ctx.arc(n.x,n.y,16,0,Math.PI*2);
+      ctx.fillStyle='#5a7c5a';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.fillStyle='#3d2b1f';ctx.font=`10px 'JetBrains Mono',monospace`;ctx.textAlign='center';
+      const label=n.title.length>11?n.title.slice(0,11)+'…':n.title;
+      ctx.fillText(label,n.x,n.y+28);
+    });
+    ctx.restore();
+    graphAnimId=requestAnimationFrame(draw);
+  }
+  graphAnimId=requestAnimationFrame(draw);
+  canvas.onclick=e=>{
+    const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+    const hit=graphNodes.find(n=>Math.hypot(n.x-x,n.y-y)<20);
+    if(hit) window.openNote(hit.id);
   };
-  reader.readAsText(file);
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
-function render() {
-  const app = document.getElementById('app');
-  app.innerHTML = buildUI();
-  bindEvents();
-  if (currentView === 'graph') setTimeout(initGraph, 50);
-}
+// ─── Icons ────────────────────────────────────────────────────────────────────
+const ic = {
+  note:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  search:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  graph:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="6" x2="9" y2="10"/><line x1="18" y1="6" x2="15" y2="10"/><line x1="6" y1="18" x2="9" y2="14"/><line x1="18" y1="18" x2="15" y2="14"/></svg>`,
+  journal:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  plus:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  back:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>`,
+  edit:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  trash:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  pin:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  pinFill:`<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="white"/></svg>`,
+  eye:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  tag:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+  folder:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+  download:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  image:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>`,
+  check:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>`,
+  close:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  link:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  checklist:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
+  google:`<svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>`,
+  sync:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+};
 
+// ─── Note Card ────────────────────────────────────────────────────────────────
 function noteCard(note) {
-  const preview = note.content.replace(/[#*`\[\]>]/g,'').slice(0,75) + '...';
-  return `
-  <div class="card ${note.pinned?'pinned':''} fade-in" onclick="openNote(notes.find(n=>n.id==='${note.id}'))">
-    ${note.pinned ? `<div class="pin-badge">${icons.pinFill}</div>` : ''}
+  const preview=(note.content||'').replace(/[#*`\[\]>]/g,'').slice(0,70)+'...';
+  const firstImg=(note.images||[])[0];
+  const checkDone=(note.checklist||[]).filter(c=>c.done).length;
+  const checkTotal=(note.checklist||[]).length;
+  return `<div class="card ${note.pinned?'pinned':''} fade-in" onclick="openNote('${note.id}')">
+    ${note.pinned?`<div class="pin-badge">${ic.pinFill}</div>`:''}
+    ${firstImg?`<img class="card-img" src="${firstImg}" alt=""/>`:'' }
     <div class="card-title">${note.title}</div>
     <div class="card-preview">${preview}</div>
     <div class="card-meta">
-      ${note.folder ? `<span class="folder-chip">${note.folder}</span>` : ''}
-      ${(note.tags||[]).slice(0,3).map(t=>`<span class="tag">#${t}</span>`).join('')}
-      <span class="date-text">${formatDate(note.updated)}</span>
+      ${note.folder?`<span class="folder-chip">${note.folder}</span>`:''}
+      ${(note.tags||[]).slice(0,2).map(t=>`<span class="tag">#${t}</span>`).join('')}
+      ${checkTotal>0?`<span class="tag" style="background:var(--green2);color:var(--green)">✓ ${checkDone}/${checkTotal}</span>`:''}
+      <span class="date-text">${formatDate(note.updatedAt||note.updated)}</span>
     </div>
   </div>`;
 }
 
-function buildUI() {
-  // ── EDIT VIEW ──
-  if (currentView === 'edit') {
-    return `
-    <div class="view">
+// ─── Build UI ─────────────────────────────────────────────────────────────────
+function buildNavBar() {
+  const items=[
+    {icon:'note',label:'Catatan',v:'home'},
+    {icon:'tag',label:'Tags',v:'tags'},
+    {icon:'folder',label:'Folder',v:'folders'},
+    {icon:'graph',label:'Graph',v:'graph'},
+    {icon:'journal',label:'Jurnal',v:'journal'},
+  ];
+  return `<div class="nav-bar">${items.map(item=>`
+    <button class="nav-item ${currentView===item.v?'active':''}"
+      onclick="${item.v==='graph'?`cancelAnimationFrame(graphAnimId);currentView='graph';render()`
+               :item.v==='journal'?'newJournal()'
+               :`setView('${item.v}')`}">
+      ${ic[item.icon]}<span>${item.label}</span>
+    </button>`).join('')}</div>`;
+}
+
+function render() {
+  if (!currentUser) {
+    document.getElementById('app').innerHTML = buildLogin();
+    return;
+  }
+  document.getElementById('app').innerHTML = buildMain();
+  bindEvents();
+  if(currentView==='graph') setTimeout(initGraph,50);
+}
+
+function buildLogin() {
+  return `<div class="login-screen">
+    <div class="login-logo">◈</div>
+    <div class="login-title">Note<span style="color:var(--green)">Mind</span></div>
+    <div class="login-sub">Aplikasi catatan cerdas dengan<br/>sinkronisasi realtime antar device</div>
+    <button class="login-btn" onclick="loginGoogle()">
+      ${ic.google} Masuk dengan Google
+    </button>
+    <div class="login-features">
+      <div class="login-feature">📝 Catatan dengan Markdown & Checklist</div>
+      <div class="login-feature">🖼️ Simpan gambar dalam catatan</div>
+      <div class="login-feature">🔗 Linked notes & Graph View</div>
+      <div class="login-feature">☁️ Sinkronisasi realtime antar HP</div>
+      <div class="login-feature">📔 Daily Journal otomatis</div>
+    </div>
+  </div>`;
+}
+
+function buildMain() {
+  // EDIT
+  if(currentView==='edit') {
+    return `<div class="view">
       <div class="header">
-        <button class="btn-outline btn-sm" onclick="currentView=activeNote?'note':'home';render()">
-          ${icons.back} Batal
-        </button>
+        <button class="btn-outline btn-sm" onclick="goBack()">${ic.back} Batal</button>
         <div style="display:flex;gap:8px">
-          <button class="btn-outline btn-sm" onclick="previewMode=!previewMode;render()" title="Preview">
-            ${icons.eye}
-          </button>
-          <button class="btn btn-sm btn-green" onclick="saveNote()">
-            ${icons.check} Simpan
-          </button>
+          <button class="btn-outline btn-sm" onclick="togglePreview()">${ic.eye}</button>
+          <button class="btn btn-sm btn-green" onclick="saveNote()">${ic.check} Simpan</button>
         </div>
       </div>
       <div class="scroll-area">
-        <input class="input input-title" id="edit-title" value="${editState.title.replace(/"/g,'&quot;')}" placeholder="Judul catatan..." style="margin-bottom:14px;width:100%"/>
+        <input class="input input-title" id="edit-title" value="${(editState.title||'').replace(/"/g,'&quot;')}" placeholder="Judul..." style="margin-bottom:14px;width:100%"/>
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <input class="input" id="edit-folder" value="${(editState.folder||'').replace(/"/g,'&quot;')}" placeholder="📁 Folder..." style="font-size:13px"/>
-          <input class="input" id="edit-tags" value="${(editState.tags||'').replace(/"/g,'&quot;')}" placeholder="#tags,pisah,koma" style="font-size:13px"/>
+          <input class="input" id="edit-tags" value="${(editState.tags||'').replace(/"/g,'&quot;')}" placeholder="#tags,koma" style="font-size:13px"/>
         </div>
-        ${!previewMode ? `
+        ${!previewMode?`
         <div class="md-toolbar">
           <button class="tool-btn" onclick="insertMarkdown('# ')">H1</button>
           <button class="tool-btn" onclick="insertMarkdown('## ')">H2</button>
@@ -743,277 +624,212 @@ function buildUI() {
           <button class="tool-btn" onclick="insertMarkdown('- ')">list</button>
           <button class="tool-btn" onclick="insertMarkdown('> ')">quote</button>
           <button class="tool-btn" onclick="insertMarkdown('~~','~~')">~~del~~</button>
-          <button class="tool-btn" onclick="insertMarkdown('---\\n')">---</button>
         </div>
-        <textarea class="textarea" id="note-textarea" placeholder="Tulis di sini...\n\n# Judul\n**tebal** *miring*\n[[Link ke catatan lain]]">${editState.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-        ` : `
-        <div class="md-preview" id="md-preview">${renderMarkdown(editState.content)}</div>
-        `}
-        <div class="tip-box">💡 Gunakan [[Nama Catatan]] untuk membuat link antar catatan</div>
-      </div>
-    </div>`;
-  }
+        <textarea class="textarea" id="note-textarea" placeholder="Tulis di sini...">${(editState.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+        `:`<div class="md-preview">${renderMarkdown(editState.content, editChecklist)}</div>`}
 
-  // ── NOTE VIEW ──
-  if (currentView === 'note' && activeNote) {
-    return `
-    <div class="view">
-      <div class="header">
-        <button class="btn-outline btn-sm" onclick="currentView='home';activeNote=null;render()">
-          ${icons.back} Kembali
-        </button>
-        <div style="display:flex;gap:8px">
-          <button class="btn-outline btn-sm" onclick="togglePin('${activeNote.id}')" title="${activeNote.pinned?'Lepas pin':'Pin'}">
-            ${activeNote.pinned ? icons.pinFill : icons.pin}
-          </button>
-          <button class="btn-outline btn-sm" onclick="editNote(activeNote)">
-            ${icons.edit}
-          </button>
-          <button class="btn-outline btn-sm btn-danger" onclick="deleteNote('${activeNote.id}')">
-            ${icons.trash}
-          </button>
-        </div>
-      </div>
-      <div class="scroll-area">
-        <h2 style="font-family:var(--font);color:var(--text);margin-bottom:10px;font-size:22px;line-height:1.3">${activeNote.title}</h2>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
-          ${activeNote.folder ? `<span class="folder-chip">${icons.folder} ${activeNote.folder}</span>` : ''}
-          ${(activeNote.tags||[]).map(t=>`<span class="tag">#${t}</span>`).join('')}
-          <span class="date-text" style="margin-left:auto">Diperbarui ${formatDate(activeNote.updated)}</span>
-        </div>
-        <div class="md-preview" id="note-content">${renderMarkdown(activeNote.content)}</div>
-        ${(activeNote.links||[]).length > 0 ? `
-        <div class="divider"></div>
-        <div class="section-title">${icons.link} Terhubung ke</div>
-        ${activeNote.links.map(lname => {
-          const found = notes.find(n=>n.title===lname);
-          return found
-            ? `<div class="card" style="padding:11px 14px" onclick="openNote(notes.find(n=>n.id==='${found.id}'))">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span style="color:var(--green)">${icons.link}</span>
-                  <div>
-                    <div style="font-size:14px;font-weight:600">${lname}</div>
-                    <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${formatDate(found.updated)}</div>
-                  </div>
-                </div>
-              </div>`
-            : `<div class="card" style="padding:11px 14px;opacity:0.5">
-                <span style="font-size:13px;color:var(--text3);font-family:var(--mono)">[[${lname}]] — belum dibuat</span>
-              </div>`;
-        }).join('')}` : ''}
-      </div>
-    </div>`;
-  }
-
-  // ── GRAPH VIEW ──
-  if (currentView === 'graph') {
-    return `
-    <div class="view">
-      <div class="header">
-        <div class="logo"><span class="logo-mark">◈</span> Graph View</div>
-        <button class="btn-outline btn-sm" onclick="cancelAnimationFrame(graphAnimId);graphAnimId=null;currentView='home';render()">
-          ${icons.close} Tutup
-        </button>
-      </div>
-      <div class="scroll-area">
-        <div class="section-title">Ketuk node untuk buka catatan</div>
-        <canvas id="graph-canvas"></canvas>
-        <div class="divider"></div>
-        <div class="section-title">Semua catatan (${notes.length})</div>
-        ${notes.map(noteCard).join('')}
-      </div>
-    </div>`;
-  }
-
-  // ── TAGS VIEW ──
-  if (currentView === 'tags') {
-    const tags = getAllTags();
-    return `
-    <div class="view">
-      ${buildHeader('Tags')}
-      <div class="scroll-area">
-        <div class="section-title">Semua Tag (${Object.keys(tags).length})</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
-          ${Object.entries(tags).map(([tag,count]) => `
-          <button class="btn-outline" style="font-size:13px;padding:9px 14px;border-radius:20px" 
-            onclick="activeTag='${tag}';activeFolder=null;currentView='home';render()">
-            #${tag} <span style="color:var(--text3);font-family:var(--mono)">(${count})</span>
-          </button>`).join('')}
-        </div>
-        ${Object.keys(tags).length === 0 ? `<div class="empty-state"><div class="emoji">🏷️</div><h3>Belum ada tag</h3><p>Tambahkan #tag saat membuat catatan</p></div>` : ''}
-      </div>
-      ${buildNavBar()}
-    </div>`;
-  }
-
-  // ── FOLDERS VIEW ──
-  if (currentView === 'folders') {
-    const folders = getAllFolders();
-    return `
-    <div class="view">
-      ${buildHeader('Folder')}
-      <div class="scroll-area">
-        <div class="section-title">Semua Folder (${Object.keys(folders).length})</div>
-        ${Object.entries(folders).map(([folder,count]) => `
-        <div class="card fade-in" onclick="activeFolder='${folder}';activeTag=null;currentView='home';render()">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="color:var(--green)">${icons.folder}</div>
-            <div>
-              <div class="card-title">${folder}</div>
-              <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${count} catatan</div>
+        <!-- Checklist Section -->
+        <div style="margin-top:14px">
+          <div class="section-title">${ic.checklist} Checklist</div>
+          <div class="checklist-section">
+            ${editChecklist.map((item,i)=>`
+            <div class="check-editor-item">
+              <input type="checkbox" ${item.done?'checked':''} onchange="toggleEditCheck(${i})"/>
+              <input type="text" value="${item.text.replace(/"/g,'&quot;')}" oninput="editChecklist[${i}].text=this.value" placeholder="Item checklist..."/>
+              <button onclick="removeCheckItem(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;">×</button>
+            </div>`).join('')}
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input class="input" id="new-check-input" placeholder="+ Tambah item..." style="font-size:13px" onkeydown="if(event.key==='Enter')addCheckItem()"/>
+              <button class="btn btn-sm" onclick="addCheckItem()">+</button>
             </div>
           </div>
-        </div>`).join('')}
-        ${Object.keys(folders).length === 0 ? `<div class="empty-state"><div class="emoji">📁</div><h3>Belum ada folder</h3><p>Tambahkan folder saat membuat catatan</p></div>` : ''}
+        </div>
+
+        <!-- Image Upload -->
+        <div style="margin-top:14px">
+          <div class="section-title">${ic.image} Gambar</div>
+          <label class="img-upload-area">
+            <input type="file" accept="image/*" multiple onchange="handleImageUpload(event)" style="display:none"/>
+            <div style="font-size:24px;margin-bottom:8px">📷</div>
+            <div style="font-size:13px;color:var(--text3);font-family:var(--mono)">Ketuk untuk pilih gambar (max 500KB/gambar)</div>
+          </label>
+          ${editImages.length>0?`
+          <div class="img-preview-grid">
+            ${editImages.map((img,i)=>`
+            <div class="img-preview-item">
+              <img src="${img}" alt=""/>
+              <button class="del-img" onclick="removeImage(${i})">×</button>
+            </div>`).join('')}
+          </div>`:''}
+        </div>
+
+        <div class="tip-box">💡 Gunakan [[Nama Catatan]] untuk link antar catatan</div>
+      </div>
+    </div>`;
+  }
+
+  // NOTE VIEW
+  if(currentView==='note' && activeNote) {
+    const note=activeNote;
+    return `<div class="view">
+      <div class="header">
+        <button class="btn-outline btn-sm" onclick="goBack()">${ic.back}</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-outline btn-sm" onclick="togglePin('${note.id}')">${note.pinned?ic.pinFill:ic.pin}</button>
+          <button class="btn-outline btn-sm" onclick="editNote('${note.id}')">${ic.edit}</button>
+          <button class="btn-outline btn-sm btn-danger" onclick="deleteNote('${note.id}')">${ic.trash}</button>
+        </div>
+      </div>
+      <div class="scroll-area">
+        <h2 style="font-family:var(--font);font-size:22px;margin-bottom:10px;line-height:1.3">${note.title}</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
+          ${note.folder?`<span class="folder-chip">${note.folder}</span>`:''}
+          ${(note.tags||[]).map(t=>`<span class="tag">#${t}</span>`).join('')}
+          <span class="date-text" style="margin-left:auto">${formatDate(note.updatedAt||note.updated)}</span>
+        </div>
+        ${(note.images||[]).length>0?`
+        <div class="img-preview-grid" style="margin-bottom:16px">
+          ${(note.images||[]).map(img=>`<div class="img-preview-item"><img src="${img}" alt="" style="height:100px"/></div>`).join('')}
+        </div>`:''}
+        <div class="md-preview" id="note-content">${renderMarkdown(note.content, note.checklist)}</div>
+        ${(note.links||[]).length>0?`
+        <div class="divider"></div>
+        <div class="section-title">${ic.link} Terhubung ke</div>
+        ${(note.links||[]).map(lname=>{
+          const found=notes.find(n=>n.title===lname);
+          return found
+            ?`<div class="card" style="padding:11px 14px" onclick="openNote('${found.id}')">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="color:var(--green)">${ic.link}</span>
+                  <div><div style="font-size:14px;font-weight:600">${lname}</div></div>
+                </div>
+              </div>`
+            :`<div class="card" style="padding:11px 14px;opacity:0.5"><span style="font-size:13px;color:var(--text3);font-family:var(--mono)">[[${lname}]] — belum dibuat</span></div>`;
+        }).join('')}`:''}
+      </div>
+    </div>`;
+  }
+
+  // GRAPH
+  if(currentView==='graph') return `<div class="view">
+    <div class="header">
+      <div class="logo"><span class="logo-mark">◈</span> Graph View</div>
+      <button class="btn-outline btn-sm" onclick="cancelAnimationFrame(graphAnimId);setView('home')">${ic.close}</button>
+    </div>
+    <div class="scroll-area">
+      <div class="section-title">Ketuk node untuk buka catatan</div>
+      <canvas id="graph-canvas"></canvas>
+    </div>
+  </div>`;
+
+  // TAGS
+  if(currentView==='tags') {
+    const tags=getAllTags();
+    return `<div class="view">
+      <div class="header"><div class="logo"><span class="logo-mark">◈</span> Tags</div><button class="btn-outline btn-sm" onclick="setView('home')">${ic.back}</button></div>
+      <div class="scroll-area">
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${Object.entries(tags).map(([tag,count])=>`
+          <button class="btn-outline" style="font-size:13px;padding:9px 14px;border-radius:20px" onclick="setActiveTag('${tag}')">
+            #${tag} <span style="color:var(--text3)">(${count})</span>
+          </button>`).join('')}
+        </div>
+        ${Object.keys(tags).length===0?`<div class="empty-state"><div class="emoji">🏷️</div><h3>Belum ada tag</h3></div>`:''}
       </div>
       ${buildNavBar()}
     </div>`;
   }
 
-  // ── HOME VIEW ──
-  const filtered = getFilteredNotes();
-  const pinned = filtered.filter(n=>n.pinned);
-  const recent = filtered.filter(n=>!n.pinned);
-  const tags = getAllTags();
+  // FOLDERS
+  if(currentView==='folders') {
+    const folders=getAllFolders();
+    return `<div class="view">
+      <div class="header"><div class="logo"><span class="logo-mark">◈</span> Folder</div><button class="btn-outline btn-sm" onclick="setView('home')">${ic.back}</button></div>
+      <div class="scroll-area">
+        ${Object.entries(folders).map(([folder,count])=>`
+        <div class="card fade-in" onclick="setActiveFolder('${folder}')">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="color:var(--green)">${ic.folder}</div>
+            <div><div class="card-title">${folder}</div><div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${count} catatan</div></div>
+          </div>
+        </div>`).join('')}
+        ${Object.keys(folders).length===0?`<div class="empty-state"><div class="emoji">📁</div><h3>Belum ada folder</h3></div>`:''}
+      </div>
+      ${buildNavBar()}
+    </div>`;
+  }
 
-  return `
-  <div class="view">
+  // HOME
+  const filtered=getFilteredNotes();
+  const pinned=filtered.filter(n=>n.pinned);
+  const recent=filtered.filter(n=>!n.pinned);
+  const tags=getAllTags();
+  const syncDot=`<span class="sync-dot ${isSyncing?'syncing':''}" title="${isSyncing?'Menyinkron...':'Tersinkron'}"></span>`;
+
+  return `<div class="view">
     <div class="header">
-      <div class="logo"><span class="logo-mark">◈</span>Note<span class="logo-mark">Mind</span></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-outline btn-sm" onclick="exportNotes()" title="Ekspor">${icons.download}</button>
-        <label class="btn-outline btn-sm" style="cursor:pointer" title="Impor">
-          ${icons.upload}
-          <input type="file" accept=".json" onchange="importNotes(event)" style="display:none"/>
-        </label>
+      <div class="logo"><span class="logo-mark">◈</span>Note<span class="logo-mark">Mind</span>${syncDot}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <img src="${currentUser.photoURL||''}" style="width:28px;height:28px;border-radius:50%;cursor:pointer" onclick="logout()" title="Keluar (${currentUser.displayName})"/>
+        <button class="btn-outline btn-sm" onclick="exportNotes()" title="Ekspor">${ic.download}</button>
       </div>
     </div>
     <div class="scroll-area">
-
-      <!-- Search -->
       <div class="search-wrap">
-        <div class="search-icon">${icons.search}</div>
+        <div class="search-icon">${ic.search}</div>
         <input class="input search-input" id="search-input" placeholder="Cari catatan, tag, isi..." value="${searchQuery}" oninput="searchQuery=this.value;activeTag=null;activeFolder=null;render()"/>
       </div>
-
-      <!-- Stats -->
-      ${!searchQuery && !activeTag && !activeFolder ? `
+      ${!searchQuery&&!activeTag&&!activeFolder?`
       <div class="stats-bar">
         <div class="stat-item"><div class="stat-num">${notes.length}</div><div class="stat-label">Catatan</div></div>
         <div class="stat-item"><div class="stat-num">${Object.keys(tags).length}</div><div class="stat-label">Tags</div></div>
         <div class="stat-item"><div class="stat-num">${Object.keys(getAllFolders()).length}</div><div class="stat-label">Folder</div></div>
         <div class="stat-item"><div class="stat-num">${notes.filter(n=>n.pinned).length}</div><div class="stat-label">Pinned</div></div>
       </div>
-
-      <!-- Quick Actions -->
       <div class="quick-actions">
-        <button class="quick-btn" onclick="newJournal()">📔 Jurnal Baru</button>
-        <button class="quick-btn" onclick="cancelAnimationFrame(graphAnimId);currentView='graph';render()">📊 Graph View</button>
-        <button class="quick-btn" onclick="currentView='tags';render()">🏷️ Tags</button>
-        <button class="quick-btn" onclick="currentView='folders';render()">📁 Folder</button>
-      </div>
-      ` : `
-      <!-- Filter Active -->
+        <button class="quick-btn" onclick="newJournal()">📔 Jurnal</button>
+        <button class="quick-btn" onclick="cancelAnimationFrame(graphAnimId);currentView='graph';render()">📊 Graph</button>
+        <button class="quick-btn" onclick="setView('tags')">🏷️ Tags</button>
+        <button class="quick-btn" onclick="setView('folders')">📁 Folder</button>
+      </div>`:`
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <button class="btn-outline btn-sm" onclick="activeTag=null;activeFolder=null;searchQuery='';render()">
-          ${icons.close} Hapus filter
-        </button>
-        ${activeTag ? `<span class="tag" style="font-size:12px">#${activeTag}</span>` : ''}
-        ${activeFolder ? `<span class="folder-chip" style="font-size:12px">📁 ${activeFolder}</span>` : ''}
-        ${searchQuery ? `<span class="tag" style="font-size:12px">🔍 "${searchQuery}"</span>` : ''}
-      </div>
-      `}
-
-      <!-- Pinned -->
-      ${pinned.length > 0 ? `
-      <div class="section-title">📌 Disematkan</div>
-      ${pinned.map(noteCard).join('')}
-      ` : ''}
-
-      <!-- Recent -->
-      <div class="section-title">
-        ${searchQuery || activeTag || activeFolder ? `Hasil (${filtered.length})` : '📝 Terbaru'}
-      </div>
-      ${recent.length === 0 && pinned.length === 0 ? `
+        <button class="btn-outline btn-sm" onclick="clearFilter()">${ic.close} Reset</button>
+        ${activeTag?`<span class="tag">#${activeTag}</span>`:''}
+        ${activeFolder?`<span class="folder-chip">📁 ${activeFolder}</span>`:''}
+      </div>`}
+      ${pinned.length>0?`<div class="section-title">📌 Disematkan</div>${pinned.map(noteCard).join('')}`:''}
+      <div class="section-title">${searchQuery||activeTag||activeFolder?`Hasil (${filtered.length})`:'📝 Terbaru'}</div>
+      ${recent.length===0&&pinned.length===0?`
       <div class="empty-state slide-up">
         <div class="emoji">🌿</div>
         <h3>Belum ada catatan</h3>
-        <p>Tekan tombol + untuk mulai menulis</p>
-      </div>
-      ` : recent.map(noteCard).join('')}
+        <p>Tekan + untuk mulai menulis</p>
+      </div>`
+      :recent.map(noteCard).join('')}
     </div>
-
-    <!-- FAB -->
-    <button class="fab" onclick="newNote()">${icons.plus}</button>
-
+    <button class="fab" onclick="newNote()">${ic.plus}</button>
     ${buildNavBar()}
   </div>`;
 }
 
-function buildHeader(title) {
-  return `
-  <div class="header">
-    <div class="logo"><span class="logo-mark">◈</span> ${title}</div>
-    <button class="btn-outline btn-sm" onclick="currentView='home';render()">${icons.back} Kembali</button>
-  </div>`;
-}
-
-function buildNavBar() {
-  const items = [
-    { icon: 'note', label: 'Catatan', view: 'home' },
-    { icon: 'tag', label: 'Tags', view: 'tags' },
-    { icon: 'folder', label: 'Folder', view: 'folders' },
-    { icon: 'graph', label: 'Graph', view: 'graph' },
-    { icon: 'journal', label: 'Jurnal', view: 'journal' },
-  ];
-  return `<div class="nav-bar">
-    ${items.map(item => `
-    <button class="nav-item ${currentView===item.view||(!['tags','folders','graph','journal'].includes(currentView)&&item.view==='home')?'active':''}"
-      onclick="${item.view==='graph'?`cancelAnimationFrame(graphAnimId);currentView='graph';render()`
-              :item.view==='journal'?'newJournal()'
-              :`currentView='${item.view}';render()`}">
-      ${icons[item.icon]}
-      <span>${item.label}</span>
-    </button>`).join('')}
-  </div>`;
-}
-
 function bindEvents() {
-  // Sync edit inputs
-  const titleEl = document.getElementById('edit-title');
-  if (titleEl) titleEl.oninput = e => editState.title = e.target.value;
-
-  const folderEl = document.getElementById('edit-folder');
-  if (folderEl) folderEl.oninput = e => editState.folder = e.target.value;
-
-  const tagsEl = document.getElementById('edit-tags');
-  if (tagsEl) tagsEl.oninput = e => editState.tags = e.target.value;
-
-  const textareaEl = document.getElementById('note-textarea');
-  if (textareaEl) textareaEl.oninput = e => editState.content = e.target.value;
-
-  // Backlinks in note view
-  const noteContent = document.getElementById('note-content');
-  if (noteContent) {
-    noteContent.onclick = e => {
-      const link = e.target.closest('[data-link]');
-      if (link) {
-        const name = link.dataset.link;
-        const found = notes.find(n=>n.title===name);
-        if (found) openNote(found);
-      }
-    };
-  }
-
-  // Restore search focus
-  const searchEl = document.getElementById('search-input');
-  if (searchEl && document.activeElement !== searchEl && searchQuery) {
-    // Don't steal focus
-  }
+  const titleEl=document.getElementById('edit-title');
+  if(titleEl) titleEl.oninput=e=>editState.title=e.target.value;
+  const folderEl=document.getElementById('edit-folder');
+  if(folderEl) folderEl.oninput=e=>editState.folder=e.target.value;
+  const tagsEl=document.getElementById('edit-tags');
+  if(tagsEl) tagsEl.oninput=e=>editState.tags=e.target.value;
+  const taEl=document.getElementById('note-textarea');
+  if(taEl) taEl.oninput=e=>editState.content=e.target.value;
+  const nc=document.getElementById('note-content');
+  if(nc) nc.onclick=e=>{
+    const link=e.target.closest('[data-link]');
+    if(link){const found=notes.find(n=>n.title===link.dataset.link);if(found)window.openNote(found.id);}
+  };
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
-render();
+window.render = render;
+
 </script>
 </body>
 </html>
