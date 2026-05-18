@@ -43,17 +43,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
 .nav-item.active{color:var(--green);}
 .fab{position:fixed;bottom:calc(72px + var(--safe-bottom));right:calc(50% - 210px);width:54px;height:54px;border-radius:27px;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-lg);z-index:45;transition:all 0.2s;}
 .fab:active{transform:scale(0.92);}
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all 0.18s;position:relative;box-shadow:var(--shadow);}
-.card:active{transform:scale(0.98);}
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.notes-grid-single{display:block;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:12px 12px;cursor:pointer;transition:all 0.18s;position:relative;box-shadow:var(--shadow);margin-bottom:0;}
+.card:active{transform:scale(0.97);}
 .card.pinned{border-color:var(--green);background:#f9fcf9;}
-.card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.3;}
-.card-preview{font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:9px;font-family:var(--mono);}
-.card-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-.card-img{width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
-.pin-badge{position:absolute;top:12px;right:12px;color:var(--green);}
-.tag{background:var(--bg2);color:var(--text2);font-size:11px;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
-.folder-chip{background:var(--green2);color:var(--green);font-size:11px;padding:3px 9px;border-radius:20px;font-family:var(--mono);}
-.date-text{font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:auto;}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-preview{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:8px;font-family:var(--mono);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-meta{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+.card-img{width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px;}
+.pin-badge{position:absolute;top:8px;right:8px;color:var(--green);}
+.tag{background:var(--bg2);color:var(--text2);font-size:10px;padding:2px 7px;border-radius:20px;font-family:var(--mono);}
+.folder-chip{background:var(--green2);color:var(--green);font-size:10px;padding:2px 7px;border-radius:20px;font-family:var(--mono);}
+.date-text{font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:auto;}
 .section-title{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px;margin-top:4px;font-family:var(--mono);}
 .btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:14px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:7px;transition:all 0.18s;font-weight:600;}
 .btn:active{transform:scale(0.96);}
@@ -490,21 +492,44 @@ function initGraph() {
       ctx.strokeStyle='#c8b89a';ctx.lineWidth=1.5;ctx.stroke();
     });});
     ns.forEach(n=>{
-      ctx.beginPath();ctx.arc(n.x,n.y,16,0,Math.PI*2);
-      ctx.fillStyle='#5a7c5a';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
-      ctx.fillStyle='#3d2b1f';ctx.font=`10px 'JetBrains Mono',monospace`;ctx.textAlign='center';
-      const label=n.title.length>11?n.title.slice(0,11)+'…':n.title;
-      ctx.fillText(label,n.x,n.y+28);
+      const r=18;
+      // Shadow
+      ctx.beginPath();ctx.arc(n.x,n.y,r+2,0,Math.PI*2);
+      ctx.fillStyle='rgba(90,124,90,0.2)';ctx.fill();
+      // Node
+      ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);
+      ctx.fillStyle='#5a7c5a';ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke();
+      // Icon
+      ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.textAlign='center';
+      ctx.fillText('◈',n.x,n.y+4);
+      // Label
+      ctx.fillStyle='#3d2b1f';ctx.font='10px monospace';ctx.textAlign='center';
+      const label=n.title.length>12?n.title.slice(0,12)+'…':n.title;
+      // Label background
+      const lw=ctx.measureText(label).width;
+      ctx.fillStyle='rgba(250,248,243,0.85)';
+      ctx.fillRect(n.x-lw/2-3,n.y+r+3,lw+6,14);
+      ctx.fillStyle='#3d2b1f';
+      ctx.fillText(label,n.x,n.y+r+14);
     });
     ctx.restore();
     graphAnimId=requestAnimationFrame(draw);
   }
   graphAnimId=requestAnimationFrame(draw);
-  canvas.onclick=e=>{
-    const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
-    const hit=graphNodes.find(n=>Math.hypot(n.x-x,n.y-y)<20);
-    if(hit) window.openNote(hit.id);
-  };
+  // Touch support
+  function handleGraphTap(clientX, clientY) {
+    const rect=canvas.getBoundingClientRect();
+    const x=clientX-rect.left, y=clientY-rect.top;
+    const hit=graphNodes.find(n=>Math.hypot(n.x-x,n.y-y)<28);
+    if(hit){ cancelAnimationFrame(graphAnimId); graphAnimId=null; window.openNote(hit.id); }
+  }
+  canvas.onclick=e=>handleGraphTap(e.clientX,e.clientY);
+  canvas.addEventListener("touchend",e=>{
+    e.preventDefault();
+    const t=e.changedTouches[0];
+    handleGraphTap(t.clientX,t.clientY);
+  },{passive:false});
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -538,7 +563,7 @@ function noteCard(note) {
   const firstImg=(note.images||[])[0];
   const checkDone=(note.checklist||[]).filter(c=>c.done).length;
   const checkTotal=(note.checklist||[]).length;
-  return `<div class="card ${note.pinned?'pinned':''} fade-in" onclick="openNote('${note.id}')">
+  return `<div class="card ${note.pinned?'pinned':''} fade-in" onclick="openNote('${note.id}')" style="margin-bottom:0">
     ${note.pinned?`<div class="pin-badge">${ic.pinFill}</div>`:''}
     ${firstImg?`<img class="card-img" src="${firstImg}" alt=""/>`:'' }
     <div class="card-title">${note.title}</div>
@@ -802,7 +827,7 @@ function buildMain() {
         ${activeTag?`<span class="tag">#${activeTag}</span>`:''}
         ${activeFolder?`<span class="folder-chip">📁 ${activeFolder}</span>`:''}
       </div>`}
-      ${pinned.length>0?`<div class="section-title">📌 Disematkan</div>${pinned.map(noteCard).join('')}`:''}
+      ${pinned.length>0?`<div class="section-title">📌 Disematkan</div><div class="notes-grid">${pinned.map(noteCard).join('')}</div>`:''}
       <div class="section-title">${searchQuery||activeTag||activeFolder?`Hasil (${filtered.length})`:'📝 Terbaru'}</div>
       ${recent.length===0&&pinned.length===0?`
       <div class="empty-state slide-up">
